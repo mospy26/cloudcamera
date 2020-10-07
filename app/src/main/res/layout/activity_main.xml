@@ -9,12 +9,15 @@
 
     <GridView
         android:id="@+id/gridview_main_page"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        android:numColumns="3"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:numColumns="auto_fit"
+        android:columnWidth="480px"
+        android:stretchMode="columnWidth"
+        android:gravity="center"
         />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

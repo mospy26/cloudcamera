@@ -1,6 +1,7 @@
 package com.comp5216.cloudcamera.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,8 @@ import android.widget.GridView;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.comp5216.cloudcamera.MainActivity;
+import com.comp5216.cloudcamera.R;
 
 import java.util.ArrayList;
 
@@ -46,7 +49,8 @@ public class GridViewPhotosAdapter extends BaseAdapter {
         ImageView imageView;
         if (view == null) {
             imageView = new ImageView(context);
-            imageView.setLayoutParams(new GridView.LayoutParams(480, 480));
+            GridView gridView = ((MainActivity) context).findViewById(R.id.gridview_main_page);
+            imageView.setLayoutParams(new GridView.LayoutParams(gridView.getLayoutParams().width, 480));
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             imageView.setPadding(8, 8, 8, 8);
         } else {
