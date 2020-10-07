@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.icu.text.SimpleDateFormat;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -17,11 +18,18 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.comp5216.cloudcamera.views.CameraSurfaceView;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -37,6 +45,7 @@ public class CameraActivity extends AppCompatActivity {
     Bitmap clickedImageBitmap;
     Bitmap compressedImage;
     ByteArrayOutputStream imageArray;
+    FirebaseStorage storage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +53,7 @@ public class CameraActivity extends AppCompatActivity {
         setContentView(R.layout.camera_layout);
         frameLayout = (FrameLayout) findViewById(R.id.framelayout_camera);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        initFirebase();
         if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.CAMERA}, 50);
         } else {
@@ -54,7 +64,11 @@ public class CameraActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int reqCode, String[] permissions, int[] grants) {
         if (reqCode == 50) initCamera();
-        else if (reqCode == 100) createDirectoryAndSaveImage(clickedImageBitmap, new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()));
+        else if (reqCode == 100) {
+            String fileName = new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date());
+            createDirectoryAndSaveImage(fileName);
+            pushToFirebase(fileName);
+        }
     }
 
     private void initCamera() {
@@ -119,16 +133,17 @@ public class CameraActivity extends AppCompatActivity {
         saveAndQuit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                String fileName = new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date());
+
                 compressImage(clickedImageBitmap);
                 if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(CameraActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
                 }
                 else {
-                    createDirectoryAndSaveImage(clickedImageBitmap, new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()));
+                    createDirectoryAndSaveImage(fileName);
                 }
 
-                // TODO: Save to firebase
-
+                pushToFirebase(fileName);
                 finish();
             }
         });
@@ -142,7 +157,7 @@ public class CameraActivity extends AppCompatActivity {
         compressedImage.compress(Bitmap.CompressFormat.JPEG, 50, imageArray);
     }
 
-    private void createDirectoryAndSaveImage(Bitmap image, String fileName) {
+    private void createDirectoryAndSaveImage(String fileName) {
 
         File directory = new File(Environment.getExternalStorageDirectory() + "/cloudphotos/");
 
@@ -170,4 +185,25 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
+    private void pushToFirebase(String fileName) {
+
+        StorageReference storageRef = storage.getReferenceFromUrl("gs://friendly-eats-25bad.appspot.com");
+        StorageReference clickedRef = storageRef.child(fileName);
+        UploadTask uploadTask = clickedRef.putBytes(imageArray.toByteArray());
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.e("NOOOOO", "NOOOOO");
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+            }
+        });
+    }
+
+    private void initFirebase() {
+        FirebaseApp.initializeApp(this);
+        storage = FirebaseStorage.getInstance();
+    }
 }
