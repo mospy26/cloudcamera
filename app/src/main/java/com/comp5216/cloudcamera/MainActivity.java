@@ -2,7 +2,7 @@ package com.comp5216.cloudcamera;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.res.Configuration;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.GridView;
@@ -13,10 +13,13 @@ import com.google.android.material.snackbar.Snackbar;
 
 public class MainActivity extends AppCompatActivity {
 
+    Intent cameraIntent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        cameraIntent = new Intent(this, CameraActivity.class);
         initFabButton();
         initGridView();
     }
@@ -29,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
                 // handle clicking fab button
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+                startActivity(cameraIntent);
             }
         });
     }
