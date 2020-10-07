@@ -21,7 +21,9 @@ public class GridViewPhotosAdapter extends BaseAdapter {
     public GridViewPhotosAdapter(Context context) {
         this.context = context;
         imageUrls = new ArrayList<>();
-        imageUrls.add("https://homepages.cae.wisc.edu/~ece533/images/airplane.png");
+        for (int i = 0; i < 20; i++) {
+            imageUrls.add("https://homepages.cae.wisc.edu/~ece533/images/airplane.png");
+        }
     }
 
     @Override
