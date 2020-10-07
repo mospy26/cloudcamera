@@ -1,35 +1,42 @@
 package com.comp5216.cloudcamera;
 
+import android.Manifest;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.Camera;
+import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.Toast;
+import android.widget.ImageView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.comp5216.cloudcamera.views.CameraSurfaceView;
-import com.google.android.material.snackbar.Snackbar;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Date;
 
 public class CameraActivity extends AppCompatActivity {
     Camera camera;
     FrameLayout frameLayout;
     CameraSurfaceView cameraSurfaceView;
     Button capture;
-
-    // need imageview
+    Bitmap clickedImageBitmap;
+    Bitmap compressedImage;
+    ByteArrayOutputStream imageArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,15 +46,15 @@ public class CameraActivity extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.CAMERA}, 50);
-        }
-        else {
+        } else {
             initCamera();
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int reqCode, String[] permissions, int[] grants) {
-        initCamera();
+        if (reqCode == 50) initCamera();
+        else if (reqCode == 100) createDirectoryAndSaveImage(clickedImageBitmap, new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()));
     }
 
     private void initCamera() {
@@ -83,7 +90,84 @@ public class CameraActivity extends AppCompatActivity {
             if (bitmap == null) {
                 return;
             }
-            // {TODO}: save file
+//            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+//            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            clickedImageBitmap = bitmap;
+            displayPreview();
         }
     };
+
+    private void displayPreview() {
+        setContentView(R.layout.image_preview);
+        final ImageView imageView = findViewById(R.id.imageview_preview);
+
+        ViewTreeObserver vto = imageView.getViewTreeObserver();
+        vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            public boolean onPreDraw() {
+                imageView.getViewTreeObserver().removeOnPreDrawListener(this);
+                int finalHeight = imageView.getMeasuredHeight();
+                int finalWidth = imageView.getMeasuredWidth();
+//                imageView.setImageBitmap(Bitmap.createScaledBitmap(
+//                        clickedImageBitmap, finalWidth, finalHeight, false));
+                imageView.setImageBitmap(clickedImageBitmap);
+                imageView.setRotation(imageView.getRotation() + 90);
+                return true;
+            }
+        });
+
+        Button saveAndQuit = findViewById(R.id.button_confirmsave);
+        saveAndQuit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                compressImage(clickedImageBitmap);
+                if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(CameraActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+                }
+                else {
+                    createDirectoryAndSaveImage(clickedImageBitmap, new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date()));
+                }
+
+                // TODO: Save to firebase
+
+                finish();
+            }
+        });
+    }
+
+    private void compressImage(Bitmap clickedImageBitmap) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(90);
+        compressedImage = Bitmap.createBitmap(clickedImageBitmap, 0, 0, clickedImageBitmap.getWidth(), clickedImageBitmap.getHeight(), matrix, true);
+        imageArray = new ByteArrayOutputStream();
+        compressedImage.compress(Bitmap.CompressFormat.JPEG, 50, imageArray);
+    }
+
+    private void createDirectoryAndSaveImage(Bitmap image, String fileName) {
+
+        File directory = new File(Environment.getExternalStorageDirectory() + "/cloudphotos/");
+
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        File file = new File(directory, fileName + ".jpeg");
+        if (file.exists()) {
+            file.delete();
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            out.write(imageArray.toByteArray());
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
