@@ -1,6 +1,7 @@
 package com.comp5216.cloudcamera.adapter;
 
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import com.bumptech.glide.Glide;
 import com.comp5216.cloudcamera.MainActivity;
 import com.comp5216.cloudcamera.R;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class GridViewPhotosAdapter extends BaseAdapter {
@@ -23,10 +25,7 @@ public class GridViewPhotosAdapter extends BaseAdapter {
 
     public GridViewPhotosAdapter(Context context) {
         this.context = context;
-        imageUrls = new ArrayList<>();
-        for (int i = 0; i < 20; i++) {
-            imageUrls.add("https://homepages.cae.wisc.edu/~ece533/images/airplane.png");
-        }
+        imageUrls = getImagePaths();
     }
 
     @Override
@@ -63,5 +62,19 @@ public class GridViewPhotosAdapter extends BaseAdapter {
                 .placeholder(android.R.drawable.spinner_background)
                 .into(imageView);
         return imageView;
+    }
+
+    private ArrayList<String> getImagePaths() {
+        ArrayList<String> paths = new ArrayList<>();
+        File directory = new File(Environment.getExternalStorageDirectory() + "/cloudphotos/");
+        if (!directory.exists()) {
+            return paths;
+        }
+
+        for (File f: directory.listFiles()) {
+            paths.add(directory + "/" + f.getName());
+        }
+
+        return paths;
     }
 }
