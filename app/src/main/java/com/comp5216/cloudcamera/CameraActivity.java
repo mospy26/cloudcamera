@@ -154,7 +154,7 @@ public class CameraActivity extends AppCompatActivity {
         matrix.postRotate(90);
         compressedImage = Bitmap.createBitmap(clickedImageBitmap, 0, 0, clickedImageBitmap.getWidth(), clickedImageBitmap.getHeight(), matrix, true);
         imageArray = new ByteArrayOutputStream();
-        compressedImage.compress(Bitmap.CompressFormat.JPEG, 50, imageArray);
+        compressedImage.compress(Bitmap.CompressFormat.JPEG, 30, imageArray);
     }
 
     private void createDirectoryAndSaveImage(String fileName) {
@@ -188,12 +188,11 @@ public class CameraActivity extends AppCompatActivity {
     private void pushToFirebase(String fileName) {
 
         StorageReference storageRef = storage.getReferenceFromUrl("gs://friendly-eats-25bad.appspot.com");
-        StorageReference clickedRef = storageRef.child(fileName);
+        StorageReference clickedRef = storageRef.child(fileName + ".jpeg");
         UploadTask uploadTask = clickedRef.putBytes(imageArray.toByteArray());
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                Log.e("NOOOOO", "NOOOOO");
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
