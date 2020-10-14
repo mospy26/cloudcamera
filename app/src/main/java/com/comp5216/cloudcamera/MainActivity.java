@@ -1,14 +1,18 @@
 package com.comp5216.cloudcamera;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.GridView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.comp5216.cloudcamera.adapter.GridViewPhotosAdapter;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -38,12 +42,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         cameraIntent = new Intent(this, CameraActivity.class);
-        initFabButtons();
-        initGridView();
-        View mainPage = findViewById(R.id.gridview_main_page);
-        Snackbar.make(mainPage, "Syncing, hang on ... ", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show();
-        syncToFirebase(mainPage);
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int reqCode, String[] permissions, int[] grants) {
+        if (reqCode == 100) {
+            initFabButtons();
+            initGridView();
+            View mainPage = findViewById(R.id.gridview_main_page);
+            Snackbar.make(mainPage, "Syncing, hang on ... ", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+            syncToFirebase(mainPage);
+        }
     }
 
     public void initFabButtons() {
@@ -98,17 +111,13 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(ListResult listResult) {
                         for (StorageReference prefix : listResult.getPrefixes()) {
-                            // All the prefixes under listRef.
-                            // You may call listAll() recursively on them.
                         }
 
                         for (StorageReference item : listResult.getItems()) {
-                            Log.e("Faaa", item.getName());
                             firebaseFiles.add(item.getName());
                         }
 
                         if (firebaseFiles.size() == 1 && firebaseFiles.get(0).equals("")) {
-                            // TODO could not load files
                             return;
                         }
 
