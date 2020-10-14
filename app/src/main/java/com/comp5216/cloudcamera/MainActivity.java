@@ -31,11 +31,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/**
+ *
+ *
+ *
+ */
 public class MainActivity extends AppCompatActivity {
 
     Intent cameraIntent;
     GridView gridView;
-    GridViewPhotosAdapter gridViewAdapter;
+    GridViewPhotosAdapter gridViewAdapter; // Custom adapter for grid view
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +52,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Will run when file permissions are given
+     *
+     * @param reqCode
+     * @param permissions
+     * @param grants
+     */
     @Override
     public void onRequestPermissionsResult(int reqCode, String[] permissions, int[] grants) {
         if (reqCode == 100) {
@@ -59,6 +71,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Initialises floating action buttons i.e. camera and sync button
+     */
     public void initFabButtons() {
         FloatingActionButton fab = findViewById(R.id.fab_main_page);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -82,16 +97,29 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Initialises grid view containing photos
+     */
     public void initGridView() {
         gridView = findViewById(R.id.gridview_main_page);
         setAdapter();
     }
 
+    /**
+     * Helper to set grid view adapter
+     */
     public void setAdapter() {
         gridViewAdapter = new GridViewPhotosAdapter(this);
         gridView.setAdapter(gridViewAdapter);
     }
 
+    /**
+     * This function is responsible for syncing the local images to the cloud
+     *  - Compares file names both in the cloud and locally
+     *  - Uploades the images not in cloud but in local directory, deletes images in cloud that are not in local directory
+     *
+     * @param view The view to provide feedback from firebase in the form of SnackBars
+     */
     public void syncToFirebase(final View view) {
         FirebaseApp.initializeApp(this);
         FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
@@ -153,6 +181,13 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    /**
+     * Deletes files from cloud that are not present in the local directory
+     *
+     * @param fileNames List of filenames to be deleted
+     * @param storageRef Firebase Storage reference object
+     * @throws IOException
+     */
     public void deleteFilesInFirebase(ArrayList<String> fileNames, StorageReference storageRef) throws IOException {
         System.out.println(fileNames);
         for (String fileName : fileNames) {
@@ -173,6 +208,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Uploades files to cloud that are present in the local directory but not in cloud
+     *
+     * @param fileNames List of file names of that are to be uploaded
+     * @param storageRef Firebase Storage reference object
+     * @throws IOException
+     */
     public void uploadFilesInFirebase(ArrayList<String> fileNames, StorageReference storageRef) throws IOException {
 
         for (String fileName : fileNames) {
@@ -193,6 +235,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Runs when the subactivity i.e. Camera activity finishes successfully
+     *
+     * @param correlationId
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int correlationId, int resultCode,
                                     Intent data) {

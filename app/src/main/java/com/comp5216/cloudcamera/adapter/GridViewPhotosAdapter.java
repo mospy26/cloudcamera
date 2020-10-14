@@ -2,7 +2,6 @@ package com.comp5216.cloudcamera.adapter;
 
 import android.content.Context;
 import android.os.Environment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +16,12 @@ import com.comp5216.cloudcamera.R;
 import java.io.File;
 import java.util.ArrayList;
 
+/**
+ * Custom Grid View Adapter to load images into grid recycler view
+ *
+ * @author Mustafa
+ * @version 1.0
+ */
 public class GridViewPhotosAdapter extends BaseAdapter {
 
     Context context;
@@ -64,6 +69,11 @@ public class GridViewPhotosAdapter extends BaseAdapter {
         return imageView;
     }
 
+    /**
+     * Helper method to get all image file names
+     *
+     * @return List of image file names that are in the local directory to be displayed into the grid view
+     */
     private ArrayList<String> getImagePaths() {
         ArrayList<String> paths = new ArrayList<>();
         File directory = new File(Environment.getExternalStorageDirectory() + "/cloudphotos/");

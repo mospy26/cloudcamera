@@ -9,6 +9,12 @@ import androidx.annotation.NonNull;
 
 import java.io.IOException;
 
+/**
+ * Custom Camera view to deal with displaying camera's output
+ *
+ * @author Mustafa
+ * @version 1.0
+ */
 public class CameraSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
 
     private Camera camera;

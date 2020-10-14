@@ -36,6 +36,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
 
+/**
+ * Activity that deals with the custom camera view and all sub views
+ *
+ * @author Mustafa
+ * @version 1.0
+ */
 public class CameraActivity extends AppCompatActivity {
     Camera camera;
     FrameLayout frameLayout;
@@ -60,16 +66,26 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Will run when camera and file permissions are given
+     *
+     * @param reqCode
+     * @param permissions
+     * @param grants
+     */
     @Override
     public void onRequestPermissionsResult(int reqCode, String[] permissions, int[] grants) {
         if (reqCode == 50) initCamera();
         else if (reqCode == 100) {
             String fileName = new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date());
             createDirectoryAndSaveImage(fileName);
-            pushToFirebase(fileName);
+            uploadToFirebase(fileName);
         }
     }
 
+    /**
+     * Initialises the camera and sets capture button
+     */
     private void initCamera() {
         camera = checkCamera();
         camera.setDisplayOrientation(90);
@@ -84,6 +100,11 @@ public class CameraActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Helper method to load camera from android OS
+     *
+     * @return The initialised camera objects
+     */
     private Camera checkCamera() {
         Camera tryCamera = null;
         try {
@@ -95,7 +116,6 @@ public class CameraActivity extends AppCompatActivity {
         return tryCamera;
     }
 
-    // needs change
     Camera.PictureCallback pictureCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] bytes, Camera camera) {
@@ -103,13 +123,15 @@ public class CameraActivity extends AppCompatActivity {
             if (bitmap == null) {
                 return;
             }
-//            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
             clickedImageBitmap = bitmap;
             displayPreview();
         }
     };
 
+    /**
+     * Method that deals with displaying the image preview on the preview screen
+     * This method also initialises the "save and quit" button and deals with its logic
+     */
     private void displayPreview() {
         setContentView(R.layout.image_preview);
         final ImageView imageView = findViewById(R.id.imageview_preview);
@@ -118,10 +140,6 @@ public class CameraActivity extends AppCompatActivity {
         vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             public boolean onPreDraw() {
                 imageView.getViewTreeObserver().removeOnPreDrawListener(this);
-                int finalHeight = imageView.getMeasuredHeight();
-                int finalWidth = imageView.getMeasuredWidth();
-//                imageView.setImageBitmap(Bitmap.createScaledBitmap(
-//                        clickedImageBitmap, finalWidth, finalHeight, false));
                 imageView.setImageBitmap(clickedImageBitmap);
                 imageView.setRotation(imageView.getRotation() + 90);
                 return true;
@@ -142,13 +160,17 @@ public class CameraActivity extends AppCompatActivity {
                     createDirectoryAndSaveImage(fileName);
                 }
 
-                pushToFirebase(fileName);
+                uploadToFirebase(fileName);
                 setResult(RESULT_OK, getIntent());
                 finish();
             }
         });
     }
 
+    /**
+     * Compresses a given Bitmap image
+     * @param clickedImageBitmap The bitmap image to be compressed
+     */
     private void compressImage(Bitmap clickedImageBitmap) {
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
@@ -157,6 +179,11 @@ public class CameraActivity extends AppCompatActivity {
         compressedImage.compress(Bitmap.CompressFormat.JPEG, 30, imageArray);
     }
 
+    /**
+     * Creates a local directory called "cloudohptos/" if does not exist and saves the current bitmap image into the directory
+     *
+     * @param fileName The file name of the image that is to be saved
+     */
     private void createDirectoryAndSaveImage(String fileName) {
 
         File directory = new File(Environment.getExternalStorageDirectory() + "/cloudphotos/");
@@ -185,7 +212,12 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
-    private void pushToFirebase(String fileName) {
+    /**
+     * Method to upload the image with given file name to the firebase storage cloud
+     *
+     * @param fileName The file name of the image that is to be uploaded
+     */
+    private void uploadToFirebase(String fileName) {
 
         StorageReference storageRef = storage.getReferenceFromUrl("gs://friendly-eats-25bad.appspot.com");
         StorageReference clickedRef = storageRef.child(fileName + ".jpeg");
@@ -201,6 +233,9 @@ public class CameraActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Helper method to initialise Firebase App instance and firebase storage instance
+     */
     private void initFirebase() {
         FirebaseApp.initializeApp(this);
         storage = FirebaseStorage.getInstance();
