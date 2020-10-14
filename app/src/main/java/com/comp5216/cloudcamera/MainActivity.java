@@ -13,7 +13,6 @@ import android.widget.GridView;
 import com.comp5216.cloudcamera.adapter.GridViewPhotosAdapter;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Tasks;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.FirebaseApp;
@@ -24,7 +23,6 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,20 +36,33 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         cameraIntent = new Intent(this, CameraActivity.class);
-        initFabButton();
+        initFabButtons();
         initGridView();
-        syncToFirebase();
+        View mainPage = findViewById(R.id.gridview_main_page);
+        Snackbar.make(mainPage, "Syncing, hang on ... ", Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
+        syncToFirebase(mainPage);
     }
 
-    public void initFabButton() {
+    public void initFabButtons() {
         FloatingActionButton fab = findViewById(R.id.fab_main_page);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // handle clicking fab button
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "Syncing, hang on ... ", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
                 startActivityForResult(cameraIntent, 1);
+            }
+        });
+
+        FloatingActionButton syncFab = findViewById(R.id.fab_sync);
+        syncFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Syncing hang on ... ", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                syncToFirebase(view);
             }
         });
     }
@@ -61,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         gridView.setAdapter(new GridViewPhotosAdapter(this));
     }
 
-    public void syncToFirebase() {
+    public void syncToFirebase(final View view) {
         FirebaseApp.initializeApp(this);
         FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
         final StorageReference storageRef = firebaseStorage.getReferenceFromUrl("gs://friendly-eats-25bad.appspot.com");
@@ -114,6 +125,8 @@ public class MainActivity extends AppCompatActivity {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                        Snackbar.make(view, "Synced!", Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
