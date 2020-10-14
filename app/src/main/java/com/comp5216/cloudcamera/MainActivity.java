@@ -31,11 +31,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
-/**
- *
- *
- *
- */
 public class MainActivity extends AppCompatActivity {
 
     Intent cameraIntent;
@@ -50,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
         }
+        else {
+            initViewsAndButtons();
+        }
     }
 
     /**
@@ -62,13 +60,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int reqCode, String[] permissions, int[] grants) {
         if (reqCode == 100) {
-            initFabButtons();
-            initGridView();
-            View mainPage = findViewById(R.id.gridview_main_page);
-            Snackbar.make(mainPage, "Syncing, hang on ... ", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
-            syncToFirebase(mainPage);
+            initViewsAndButtons();
         }
+    }
+
+    /**
+     * Helper method to initialise all views in the main page
+     */
+    public void initViewsAndButtons() {
+        initFabButtons();
+        initGridView();
+        View mainPage = findViewById(R.id.gridview_main_page);
+        Snackbar.make(mainPage, "Syncing, hang on ... ", Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
+        syncToFirebase(mainPage);
     }
 
     /**
