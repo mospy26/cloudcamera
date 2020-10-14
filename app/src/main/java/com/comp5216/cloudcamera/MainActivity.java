@@ -30,6 +30,8 @@ import java.util.Collections;
 public class MainActivity extends AppCompatActivity {
 
     Intent cameraIntent;
+    GridView gridView;
+    GridViewPhotosAdapter gridViewAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,8 +70,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initGridView() {
-        GridView gridView = findViewById(R.id.gridview_main_page);
-        gridView.setAdapter(new GridViewPhotosAdapter(this));
+        gridView = findViewById(R.id.gridview_main_page);
+        setAdapter();
+    }
+
+    public void setAdapter() {
+        gridViewAdapter = new GridViewPhotosAdapter(this);
+        gridView.setAdapter(gridViewAdapter);
     }
 
     public void syncToFirebase(final View view) {
@@ -175,5 +182,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    @Override
+    protected void onActivityResult(int correlationId, int resultCode,
+                                    Intent data) {
+        super.onActivityResult(correlationId, resultCode, data);
+        setAdapter();
     }
 }

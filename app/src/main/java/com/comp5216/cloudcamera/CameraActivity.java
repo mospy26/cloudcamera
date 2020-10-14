@@ -143,6 +143,7 @@ public class CameraActivity extends AppCompatActivity {
                 }
 
                 pushToFirebase(fileName);
+                setResult(RESULT_OK, getIntent());
                 finish();
             }
         });
