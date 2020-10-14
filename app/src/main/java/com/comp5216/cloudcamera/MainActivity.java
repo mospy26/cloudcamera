@@ -64,9 +64,9 @@ public class MainActivity extends AppCompatActivity {
     public void syncToFirebase() {
         FirebaseApp.initializeApp(this);
         FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
-        StorageReference storageRef = firebaseStorage.getReferenceFromUrl("gs://friendly-eats-25bad.appspot.com");
+        final StorageReference storageRef = firebaseStorage.getReferenceFromUrl("gs://friendly-eats-25bad.appspot.com");
         File directory = new File(Environment.getExternalStorageDirectory() + "/cloudphotos/");
-        ArrayList<String> localFiles = new ArrayList<>();
+        final ArrayList<String> localFiles = new ArrayList<>();
         for (File file : directory.listFiles()) {
             localFiles.add(file.getName());
         }
@@ -88,6 +88,32 @@ public class MainActivity extends AppCompatActivity {
                             Log.e("Faaa", item.getName());
                             firebaseFiles.add(item.getName());
                         }
+
+                        if (firebaseFiles.size() == 1 && firebaseFiles.get(0).equals("")) {
+                            // TODO could not load files
+                            return;
+                        }
+
+                        Collections.sort(localFiles);
+                        Collections.sort(firebaseFiles);
+
+                        ArrayList<String> toDeleteOnFirebase = new ArrayList<>();
+                        ArrayList<String> toPushOnFirebase = new ArrayList<>();
+
+                        for (String fileName : firebaseFiles) {
+                            if (!localFiles.contains(fileName)) toDeleteOnFirebase.add(fileName);
+                        }
+
+                        for (String fileName : localFiles) {
+                            if (!firebaseFiles.contains(fileName)) toPushOnFirebase.add(fileName);
+                        }
+
+                        try {
+                            deleteFilesInFirebase(toDeleteOnFirebase, storageRef);
+                            uploadFilesInFirebase(toPushOnFirebase, storageRef);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -96,35 +122,6 @@ public class MainActivity extends AppCompatActivity {
                         firebaseFiles.add("");
                     }
                 });
-
-        if (firebaseFiles.size() == 1 && firebaseFiles.get(0).equals("")) {
-            // TODO could not load files
-            return;
-        }
-
-        Collections.sort(localFiles);
-        Collections.sort(firebaseFiles);
-
-        System.out.println(localFiles);
-        System.out.println(firebaseFiles);
-
-        ArrayList<String> toDeleteOnFirebase = new ArrayList<>();
-        ArrayList<String> toPushOnFirebase = new ArrayList<>();
-
-        for (String fileName : firebaseFiles) {
-            if (!localFiles.contains(fileName)) toDeleteOnFirebase.add(fileName);
-        }
-
-        for (String fileName : localFiles) {
-            if (!firebaseFiles.contains(fileName)) toPushOnFirebase.add(fileName);
-        }
-
-        try {
-            deleteFilesInFirebase(toDeleteOnFirebase, storageRef);
-            uploadFilesInFirebase(toPushOnFirebase, storageRef);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void deleteFilesInFirebase(ArrayList<String> fileNames, StorageReference storageRef) throws IOException {
